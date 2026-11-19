@@ -20,8 +20,8 @@
 <div id="toast" class="toast"></div>
 <script>
 "use strict";
-const API="https://api.restful-api.dev/objects";
-const LS="gaviota_cash_temp_v1"; const SNAP="gaviota_cash_backup_";
+const API="https://mantledb.sh/v2";
+const LS="gaviota_cash_temp_v2"; const SNAP="gaviota_cash_backup_v2_";
 let cfg=null, account={owner:null,partner:null},screen="inicio",period="mes",search="",loading=false,modalType=null,syncTimer=null,writing=false,inviting=false;
 const $=(id)=>document.getElementById(id);
 const clean=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -71,7 +71,7 @@ async function decipher(payload){
  catch{throw Error("No se puede descifrar la caja. Revisá el enlace de acceso.")}
 }
 async function req(method,id,content){
- const url=API+(id?"/"+encodeURIComponent(id):"")+(method==="GET"?"?t="+Date.now():"");
+ const url=API+(id?"/"+id.split("/").map(encodeURIComponent).join("/"):"")+(method==="GET"?"?t="+Date.now():"");
  const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),13000);
  try{
   const res=await fetch(url,{method,mode:"cors",cache:"no-store",headers:{"Content-Type":"application/json"},body:content?JSON.stringify(content):undefined,signal:controller.signal});
@@ -79,14 +79,14 @@ async function req(method,id,content){
   return await res.json();
  }finally{clearTimeout(timeout)}
 }
-async function newRecord(role,moves=[]){const enc=await cipher({moves,rev:0});const response=await req("POST",null,{name:"Gaviota - caja temporal "+role,data:enc});if(!response.id)throw Error("No se pudo crear el registro externo.");return response.id}
-async function getRecord(role){const r=await req("GET",cfg[role+"Id"]);const value=await decipher(r.data);if(!Array.isArray(value.moves))throw Error("Los movimientos están dañados.");return value}
+async function newRecord(role,moves=[]){const path=cfg.ns+"/"+role;const enc=await cipher({moves,rev:0});const response=await req("POST",path,enc);if(!response.success)throw Error("No se pudo crear el registro externo.");return path}
+async function getRecord(role){const r=await req("GET",cfg[role+"Id"]);const value=await decipher(r);if(!Array.isArray(value.moves))throw Error("Los movimientos están dañados.");return value}
 async function updateRecord(role,mov){
  const data=await getRecord(role);
  if(data.moves.some(m=>m.id===mov.id))return;
  const next={moves:[...data.moves,mov],rev:data.rev+1};
- const result=await req("PUT",cfg[role+"Id"],{name:"Gaviota - caja temporal "+role,data:await cipher(next)});
- if(!result.id)throw Error("El servidor no confirmó el movimiento.");
+ const result=await req("POST",cfg[role+"Id"],await cipher(next));
+ if(!result.success)throw Error("El servidor no confirmó el movimiento.");
  const check=await getRecord(role);
  if(!check.moves.some(m=>m.id===mov.id))throw Error("La verificación del movimiento falló. No vuelvas a cargar sin revisar el historial.");
  account[role]=check; await saveSnapshot();
@@ -126,7 +126,7 @@ function renderAuth(mode){
    if(mode==="create"){
     const initial=int($("initial").value);
     if(initial>100000000)throw Error("El monto inicial es demasiado grande.");
-    const key=b64(rand(32));cfg={key,role:"owner",name,ownerId:"",partnerId:""};
+    const key=b64(rand(32));const ns="gaviota-"+Array.from(rand(16),x=>x.toString(16).padStart(2,"0")).join("");cfg={key,role:"owner",name,ns,ownerId:"",partnerId:""};
     const init=initial>0?[{id:makeID(),ts:new Date().toISOString(),day:nowAR(),amount:initial,category:"Saldo inicial",description:"Apertura de caja",author:name}]:[];
     cfg.ownerId=await newRecord("owner",init);cfg.partnerId=await newRecord("partner",[]);
    }else{
