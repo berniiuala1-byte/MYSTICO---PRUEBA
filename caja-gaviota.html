@@ -21,7 +21,7 @@
 <script>
 "use strict";
 const API="https://api.restful-api.dev/objects";
-const LS="gaviota_cash_temp_v1";
+const LS="gaviota_cash_temp_v1"; const SNAP="gaviota_cash_backup_";
 let cfg=null, account={owner:null,partner:null},screen="inicio",period="mes",search="",loading=false,modalType=null,syncTimer=null,writing=false,inviting=false;
 const $=(id)=>document.getElementById(id);
 const clean=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -41,6 +41,23 @@ function syncLabel(s,cls=""){const t=$("sync-label");if(t){t.className="sync "+c
 function getHash(){const params=new URLSearchParams(location.hash.replace(/^#/,""));const c=params.get("c");if(!c)return null;const parts=c.split(".");if(parts.length!==3||parts.some(x=>!x)||parts[2].length<40)return null;return {ownerId:parts[0],partnerId:parts[1],key:parts[2],role:params.get("r")==="p"?"partner":"owner"}}
 function shareLink(role){return location.origin+location.pathname+"#c="+cfg.ownerId+"."+cfg.partnerId+"."+cfg.key+"&r="+(role==="partner"?"p":"o")}
 function saveConfig(){localStorage.setItem(LS,JSON.stringify(cfg))}
+async function saveSnapshot(){
+ if(!cfg||!account.owner||!account.partner)return;
+ try{const sealed=await cipher({owner:account.owner,partner:account.partner,savedAt:new Date().toISOString()});
+  localStorage.setItem(SNAP+cfg.ownerId,JSON.stringify(sealed));}
+ catch(e){console.warn("No se pudo guardar el respaldo local",e);}
+}
+async function loadSnapshot(){
+ if(!cfg)return false;
+ const saved=localStorage.getItem(SNAP+cfg.ownerId);
+ if(!saved)return false;
+ try{
+  const decoded=await decipher(JSON.parse(saved));
+  if(!Array.isArray(decoded.owner?.moves)||!Array.isArray(decoded.partner?.moves))return false;
+  account={owner:decoded.owner,partner:decoded.partner};
+  return true;
+ }catch{return false;}
+}
 async function cipher(value){
  const key=await crypto.subtle.importKey("raw",bytes(cfg.key),"AES-GCM",false,["encrypt"]);
  const iv=rand(12),data=new TextEncoder().encode(JSON.stringify(value));
@@ -72,7 +89,7 @@ async function updateRecord(role,mov){
  if(!result.id)throw Error("El servidor no confirmó el movimiento.");
  const check=await getRecord(role);
  if(!check.moves.some(m=>m.id===mov.id))throw Error("La verificación del movimiento falló. No vuelvas a cargar sin revisar el historial.");
- account[role]=check;
+ account[role]=check; await saveSnapshot();
 }
 function allMoves(){return [...(account.owner?.moves||[]),...(account.partner?.moves||[])].sort((a,b)=>b.ts.localeCompare(a.ts))}
 function balance(){return allMoves().reduce((a,m)=>a+m.amount,0)}
@@ -82,8 +99,8 @@ function totals(){const m=periodMoves();return {income:m.filter(x=>x.amount>0).r
 async function sync(silent=false){
  if(!cfg||writing||loading)return;
  loading=true;if(!silent)syncLabel("Sincronizando...","busy");
- try{const [owner,partner]=await Promise.all([getRecord("owner"),getRecord("partner")]);account={owner,partner};if(!silent)syncLabel("Sincronizada");if($("app").dataset.logged==="yes")renderDashboard()}
- catch(e){syncLabel("Sin conexión","failed");if(!silent)notify("No se pudo sincronizar. "+e.message)}
+ try{const [owner,partner]=await Promise.all([getRecord("owner"),getRecord("partner")]);account={owner,partner};await saveSnapshot();if(!silent)syncLabel("Sincronizada");if($("app").dataset.logged==="yes")renderDashboard()}
+ catch(e){const recovered=account.owner&&account.partner?false:await loadSnapshot();if(recovered)renderDashboard();syncLabel(recovered?"Sin conexión · último respaldo":"Sin conexión","failed");if(!silent)notify("No se pudo sincronizar. "+e.message)}
  finally{loading=false}
 }
 function setup(){
