@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#174631">
+<title>La Nueva Gaviota · Caja compartida</title>
+<meta name="description" content="Caja de efectivo compartida para el billar La Nueva Gaviota.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+:root{font-family:'DM Sans',system-ui,sans-serif;color:#243c2d;background:#f4f7f2}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.52;cursor:not-allowed}h1,h2,h3,p{margin:0}h1,h2,h3{font-family:Outfit,system-ui,sans-serif;letter-spacing:-.04em}svg{flex-shrink:0}#app{min-height:100dvh}.hidden{display:none!important}.brand{display:flex;gap:12px;align-items:center}.mark{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:#dcece0;color:#1c5d3d}.mark svg{width:31px;height:31px}.brand strong{display:block;font-family:Outfit,sans-serif;font-size:16px;letter-spacing:.01em}.brand small{display:block;font-size:9px;font-weight:800;letter-spacing:.18em;color:#829488;margin-top:2px}.btn{display:inline-flex;justify-content:center;align-items:center;gap:8px;border-radius:11px;padding:13px 17px;border:1px solid #dbe5db;background:white;color:#2e5c41;font-size:13px;font-weight:800;min-height:45px;transition:transform .12s}.btn:active{transform:scale(.98)}.btn.main{background:#1e6045;color:#fff;border-color:#1e6045}.btn.full{width:100%}.btn.text{border:0;background:none;min-height:30px;padding:5px;color:#4f7c5e}.btn.danger{color:#ba5946}.smallbtn{padding:8px 10px;font-size:11px;min-height:34px}.light{color:#84958a}.green{color:#278454!important}.red{color:#bb684e!important}.label{display:block;color:#41604b;font-size:12px;font-weight:800;margin:18px 0 6px}.field{border:1px solid #dfe8df;outlin
+…[1 chars truncated — re-run with head/grep/tail for full output]…
+;if(t){t.className="sync "+cls;t.textContent=s}}
+function getHash(){const params=new URLSearchParams(location.hash.replace(/^#/,""));const c=params.get("c");if(!c)return null;const parts=c.split(".");if(parts.length!==3||parts.some(x=>!x)||parts[2].length<40)return null;return {ownerId:parts[0],partnerId:parts[1],key:parts[2],role:params.get("r")==="p"?"partner":"owner"}}
+function shareLink(role){return location.origin+location.pathname+"#c="+cfg.ownerId+"."+cfg.partnerId+"."+cfg.key+"&r="+(role==="partner"?"p":"o")}
+function saveConfig(){localStorage.setItem(LS,JSON.stringify(cfg))}
+async function cipher(value){
+ const key=await crypto.subtle.importKey("raw",bytes(cfg.key),"AES-GCM",false,["encrypt"]);
+ const iv=rand(12),data=new TextEncoder().encode(JSON.stringify(value));
+ const encrypted=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,data);
+ return {v:1,iv:b64(iv),cipher:b64(new Uint8Array(encrypted))};
+}
+async function decipher(payload){
+ if(!payload?.cipher||!payload?.iv)throw Error("Los datos compartidos están incompletos.");
+ const key=await crypto.subtle.importKey("raw",bytes(cfg.key),"AES-GCM",false,["decrypt"]);
+ try{const decrypted=await crypto.subtle.decrypt({name:"AES-GCM",iv:bytes(payload.iv)},key,bytes(payload.cipher));return JSON.parse(new TextDecoder().decode(decrypted))}
+ catch{throw Error("No se puede descifrar la caja. Revisá el enlace de acceso.")}
+}
+async function req(method,id,content){
+ const url=API+(id?"/"+encodeURIComponent(id):"")+(method==="GET"?"?t="+Date.now():"");
+ const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),13000);
+ try{
+  const res=await fetch(url,{method,mode:"cors",cache:"no-store",headers:{"Content-Type":"application/json"},body:content?JSON.stringify(content):undefined,signal:controller.signal});
+  if(!res.ok)throw Error("El servicio de datos respondió con error "+res.status);
+  return await res.json();
+ }finally{clearTimeout(timeout)}
+}
+async function newRecord(role,moves=[]){const enc=await cipher({moves,rev:0});const response=await req("POST",null,{name:"Gaviota - caja temporal "+role,data:enc});if(!response.id)throw Error("No se pudo crear el registro externo.");return response.id}
+async function getRecord(role){const r=await req("GET",cfg[role+"Id"]);const value=await decipher(r.data);if(!Array.isArray(value.moves))throw Error("Los movimientos están dañados.");return value}
+async function updateRecord(role,mov){
+ const data=await getRecord(role);
+ if(data.moves.some(m=>m.id===mov.id))return;
+ const next={moves:[...data.moves,mov],rev:data.rev+1};
+ const result=await req("PUT",cfg[role+"Id"],{name:"Gaviota - caja temporal "+role,data:await cipher(next)});
+ if(!result.id)throw Error("El servidor no confirmó el movimiento.");
+ const check=await getRecord(role);
+ if(!check.moves.some(m=>m.id===mov.id))throw Error("La verificación del movimiento falló. No vuelvas a cargar sin revisar el historial.");
+ account[role]=check;
+}
+function allMoves(){return [...(account.owner?.moves||[]),...(account.partner?.moves||[])].sort((a,b)=>b.ts.localeCompare(a.ts))}
+function balance(){return allMoves().reduce((a,m)=>a+m.amount,0)}
+function datePass(d){if(period==="todo")return true;const now=nowAR();if(period==="hoy")return d===now;if(period==="mes")return d.slice(0,7)===now.slice(0,7);const a=new Date(d+"T12:00:00-03:00"),b=new Date(now+"T12:00:00-03:00");return a<=b&&a>=new Date(b.getTime()-6*86400000)}
+function periodMoves(){return allMoves().filter(m=>datePass(m.day))}
+function totals(){const m=periodMoves();return {income:m.filter(x=>x.amount>0).reduce((a,x)=>a+x.amount,0),outcome:m.filter(x=>x.amount<0).reduce((a,x)=>a-x.amount,0)}}
+async function sync(silent=false){
+ if(!cfg||writing||loading)return;
+ loading=true;if(!silent)syncLabel("Sincronizando...","busy");
+ try{const [owner,partner]=await Promise.all([getRecord("owner"),getRecord("partner")]);account={owner,partner};if(!silent)syncLabel("Sincronizada");if($("app").dataset.logged==="yes")renderDashboard()}
+ catch(e){syncLabel("Sin conexión","failed");if(!silent)notify("No se pudo sincronizar. "+e.message)}
+ finally{loading=false}
+}
+function setup(){
+ const hash=getHash(),saved=JSON.parse(localStorage.getItem(LS)||"null");
+ if(hash){cfg={...hash,name:""}; if(saved&&saved.ownerId===hash.ownerId&&saved.partnerId===hash.partnerId&&saved.role===hash.role)cfg.name=saved.name||"";}
+ else cfg=saved;
+ if(!cfg||!cfg.name){renderAuth(hash?"join":"create");return}
+ $("app").dataset.logged="yes";renderDashboard();void sync();syncTimer=setInterval(()=>{void sync(true)},9000);
+}
+function renderAuth(mode){
+ $("app").dataset.logged="no";
+ $("app").innerHTML='<main class="auth"><div class="auth-inner">'+brand()+
+ '<div class="welcome"><div class="eyebrow">EFECTIVO BAJO CONTROL</div><h1>La caja clara.<br><em>Entre los dos.</em></h1><p>Cada ingreso y gasto queda anotado, con el saldo compartido entre los socios.</p></div>'+
+ '<div class="auth-card"><h2>'+(mode==="join"?"Unite a la caja":"Abrir caja de efectivo")+'</h2><p class="muted" style="margin-top:7px">'+(mode==="join"?"Te invitaron a compartir el registro de efectivo.":"Configurá cuánto dinero tenés hoy en el billar.")+'</p>'+
+ '<form id="auth-form"><label class="label" for="yourname">Tu nombre</label><input class="field" required minlength="2" maxlength="44" id="yourname" placeholder="Ej. Bernardo" autocomplete="name">'+
+ (mode==="create"?'<label class="label" for="initial">Dinero disponible al empezar (ARS)</label><input class="field" id="initial" required inputmode="numeric" placeholder="Ej. 100000">':'')+
+ '<div id="auth-error"></div><button class="btn main full mt" id="auth-submit">'+(mode==="join"?"Ingresar como socio":"Crear mi caja")+'</button></form>'+
+ '<div class="warning"><strong>Modo temporal:</strong> usá la exportación CSV para hacer un respaldo frecuente. El almacenamiento gratuito no tiene garantía de disponibilidad.</div></div><div class="auth-footer">LA NUEVA GAVIOTA · MONTEROS, TUCUMÁN</div></div></main>';
+ $("auth-form").addEventListener("submit",async e=>{
+  e.preventDefault();const name=$("yourname").value.trim();if(name.length<2)return;
+  const btn=$("auth-submit");btn.disabled=true;btn.textContent="Conectando...";error("auth-error","");
+  try{
+   if(mode==="create"){
+    const initial=int($("initial").value);
+    if(initial>100000000)throw Error("El monto inicial es demasiado grande.");
+    const key=b64(rand(32));cfg={key,role:"owner",name,ownerId:"",partnerId:""};
+    const init=initial>0?[{id:makeID(),ts:new Date().toISOString(),day:nowAR(),amount:initial,category:"Saldo inicial",description:"Apertura de caja",author:name}]:[];
+    cfg.ownerId=await newRecord("owner",init);cfg.partnerId=await newRecord("partner",[]);
+   }else{
+    if(!cfg?.ownerId)throw Error("Falta el enlace de invitación.");
+    cfg.name=name;cfg.role="partner";
+   }
+   saveConfig();history.replaceState(null,"",location.pathname);$("app").dataset.logged="yes";
+   renderDashboard();await sync();syncTimer=setInterval(()=>{void sync(true)},9000);
+   if(mode==="create")openModal("invitar");else notify("Ya estás conectado a la caja compartida.");
+  }catch(e){error("auth-error",e.message);btn.disabled=false;btn.textContent=mode==="join"?"Ingresar como socio":"Crear mi caja";}
+ });
+}
+function periodButtons(){return ['hoy','semana','mes','todo'].map(p=>'<button data-period="'+p+'" class="'+(p===period?'active':'')+'">'+({hoy:"Hoy",semana:"7 días",mes:"Este mes",todo:"Todo"}[p])+'</button>').join("")}
+function moveHTML(m){
+ const neg=m.amount<0;return '<div class="move"><div class="move-icon '+(neg?'out':'')+'">'+(neg?'↓':'↑')+'</div><div class="movetext"><strong>'+clean(m.category)+'</strong><span class="detail">'+clean(m.description||m.category)+'</span><small>'+clean(m.author)+' · '+clean(day(m.day))+' · '+new Date(m.ts).toLocaleTimeString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",hour:"2-digit",minute:"2-digit"})+'</small></div><strong class="move-amt '+(neg?'red':'green')+'">'+(neg?'−':'+')+money(Math.abs(m.amount))+'</strong></div>';
+}
+function renderDashboard(){
+ if(!cfg)return;
+ const vals=totals(),movements=periodMoves(),filtered=movements.filter(m=>(m.category+" "+m.description+" "+m.author).toLowerCase().includes(search.toLowerCase()));
+ $("app").innerHTML='<header class="header">'+brand()+'<div class="rightnav"><div class="who"><b>'+clean(cfg.name)+'</b>'+(cfg.role==="owner"?"Administrador":"Socio")+'</div><button class="round" id="refresh" title="Actualizar saldo">↻</button></div></header>'+
+ '<main class="page"><div class="page-head"><div><div class="eyebrow">LA NUEVA GAVIOTA · CAJA</div><h1>'+(screen==="inicio"?"Resumen de efectivo":"Historial de movimientos")+'</h1><p><span id="sync-label" class="sync"><span class="dot"></span>Sincronizada</span> · '+clean(new Date().toLocaleDateString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",day:"numeric",month:"long",year:"numeric"}))+'</p></div><div class="actions">'+(cfg.role==="owner"?'<button class="btn" id="addmoney">＋ Agregar dinero</button>':'')+'<button class="btn main" id="addexpense">− Registrar gasto</button></div></div>'+
+ (screen==="inicio"?'<section class="balance-grid"><div class="balance"><div class="balance-top"><span>EFECTIVO DISPONIBLE</span><span>◉</span></div><div class="balance-amt">'+money(balance())+'</div><div class="balance-foot"><span><span class="dot"></span>Saldo compartido</span><span>ARS · Pesos argentinos</span></div></div><div class="mini-cards"><div class="mini"><div class="mini-title">Ingresos <span class="green">↗</span></div><strong>'+money(vals.income)+'</strong><small>En el período elegido</small></div><div class="mini"><div class="mini-title">Gastos <span class="red">↘</span></div><strong>'+money(vals.outcome)+'</strong><small>En el período elegido</small></div></div></section>'+
+ '<div class="tabbar"><h2>Actividad de la caja</h2><div class="period">'+periodButtons()+'</div></div><section class="two"><div class="card"><h3>Balance del período</h3><div class="sumrow"><span>Ingresos</span><strong class="green">'+money(vals.income)+'</strong></div><div class="sumrow"><span>Gastos</span><strong class="red">−'+money(vals.outcome)+'</strong></div><div class="sumrow"><span>Variación neta</span><strong>'+money(vals.income-vals.outcome)+'</strong></div></div><div class="card"><h3>Acceso compartido</h3><div class="person"><span class="avatar">A</span>Administrador <span>●</span></div><div class="person"><span class="avatar">S</span>Socio <span>●</span></div>'+(cfg.role==="owner"?'<button class="btn smallbtn" id="invite" style="margin-top:8px">↗ Copiar invitación</button>':'<p class="muted">Podés registrar los gastos desde tu celular.</p>')+'</div></section>'+
+ '<div class="section-title"><div><h2>Últimos movimientos</h2><p>Todo lo que entra y sale del billar</p></div><button class="btn text" id="more">Ver todos →</button></div><section class="list">'+(movements.length?movements.slice(0,7).map(moveHTML).join(""):'<div class="no-data">Todavía no hay movimientos en este período.</div>')+'</section>':
+ '<div class="toolbar"><input class="field" id="search" value="'+clean(search)+'" placeholder="Buscar gastos, concepto o persona..."><button id="export" class="btn">⇩ Exportar CSV</button></div>'+
+ '<div class="tabbar"><h2>'+filtered.length+' movimientos</h2><div class="period">'+periodButtons()+'</div></div><section class="list">'+(filtered.length?filtered.map(moveHTML).join(""):'<div class="no-data">No hay movimientos en este período.</div>')+'</section>')+
+ '<div class="bottompanel"><button class="btn smallbtn" id="toggleview">'+(screen==="inicio"?"Historial completo":"Volver al resumen")+'</button><button class="btn smallbtn" id="backup">⇩ Descargar respaldo</button>'+(cfg.role==="owner"?'<button class="btn smallbtn" id="invite2">Compartir con socio</button>':'')+'</div>'+
+ '<div class="footer">Registro temporal independiente del sistema BILLAR POS.<br>No sustituye un cierre de caja auditado. Guardá respaldos frecuentes.</div></main>';
+ $("refresh").onclick=()=>sync();
+ $("addexpense").onclick=()=>openModal("gasto");
+ if($("addmoney"))$("addmoney").onclick=()=>openModal("ingreso");
+ if($("invite"))$("invite").onclick=()=>openModal("invitar");
+ if($("invite2"))$("invite2").onclick=()=>openModal("invitar");
+ if($("more"))$("more").onclick=()=>{screen="movimientos";renderDashboard()};
+ $("toggleview").onclick=()=>{screen=screen==="inicio"?"movimientos":"inicio";renderDashboard()};
+ $("backup").onclick=()=>exportFile("json");
+ if($("export"))$("export").onclick=()=>exportFile("csv");
+ if($("search"))$("search").oninput=(e)=>{const position=e.target.selectionStart;search=e.target.value;renderDashboard();$("search")?.focus();$("search")?.setSelectionRange(position,position)};
+ document.querySelectorAll("[data-period]").forEach(b=>b.onclick=()=>{period=b.dataset.period;renderDashboard()});
+}
+function openModal(type){
+ modalType=type;const over=$("overlay"),body=$("mbody"),title=$("mtitle");
+ title.textContent={gasto:"Registrar gasto",ingreso:"Agregar efectivo",invitar:"Compartir con tu socio"}[type];
+ if(type==="invitar"){
+  body.innerHTML='<p class="muted mt">Este enlace abre la misma caja en el celular de tu socio. Mandáselo por WhatsApp.</p>'+
+  '<label class="label">Enlace para tu socio</label><div class="codebox" id="partnerLink">'+clean(shareLink("partner"))+'</div><button id="copyInvite" class="btn main full mt">Copiar enlace del socio</button>'+
+  '<div class="brandline"><h3 style="font-size:14px;margin-bottom:8px">Tu acceso de administrador</h3><p class="muted">Guardá este enlace privado para recuperar tu acceso en otro dispositivo.</p><button class="btn full mt" id="copyOwner">Copiar mi acceso</button></div>'+
+  '<div class="warning">Importante: estos enlaces son privados. Quien tenga uno podría acceder al contenido. Se trata de una herramienta provisoria.</div>';
+  $("copyInvite").onclick=()=>copy(shareLink("partner"));$("copyOwner").onclick=()=>copy(shareLink("owner"));
+ }else{
+  const inputDesc=type==="gasto"?"Ej. Compré 2 fardos de gaseosas":"Ej. Dinero agregado para reponer caja";
+  const choices=type==="gasto"?["Mercadería","Sueldos","Servicios","Mantenimiento","Limpieza","Compras","Otros gastos"]:["Aporte de efectivo","Reposición de caja","Devolución","Otros ingresos"];
+  body.innerHTML='<p class="muted mt">'+(type==="gasto"?"Se descuenta automáticamente del efectivo disponible.":"Se suma al saldo disponible de la caja.")+'</p>'+
+   '<form id="movform"><label class="label" for="movamount">Monto (pesos argentinos)</label><input id="movamount" inputmode="numeric" class="field amount-field" required placeholder="$ 0">'+
+   '<p class="muted" style="margin-top:7px">Disponible: '+money(balance())+'</p>'+
+   '<label class="label" for="movcat">Categoría</label><select class="field" id="movcat">'+choices.map(x=>'<option>'+clean(x)+'</option>').join("")+'</select>'+
+   '<label class="label" for="movdesc">¿En qué se gastó?</label><textarea id="movdesc" class="field" rows="3" maxlength="180" placeholder="'+clean(inputDesc)+'"></textarea><div id="mov-error"></div><button class="btn main full mt" id="movsave">Confirmar '+(type==="gasto"?"gasto":"ingreso")+'</button></form>';
+  if(type==="ingreso")document.querySelector('label[for="movdesc"]').textContent="Concepto del ingreso";
+  $("movform").onsubmit=saveMovement;
+ }
+ over.classList.add("open");
+}
+async function saveMovement(e){
+ e.preventDefault();if(writing)return;
+ const amount=int($("movamount").value),neg=modalType==="gasto";
+ if(amount<=0||amount>100000000)return error("mov-error","Ingresá un monto válido.");
+ if(neg&&amount>balance())return error("mov-error","El monto supera el efectivo disponible.");
+ const mv={id:makeID(),ts:new Date().toISOString(),day:nowAR(),amount:neg?-amount:amount,category:$("movcat").value,description:$("movdesc").value.trim(),author:cfg.name};
+ const btn=$("movsave");btn.disabled=true;btn.textContent="Registrando...";
+ writing=true;
+ try{
+  const newest=await Promise.all([getRecord("owner"),getRecord("partner")]);
+  account={owner:newest[0],partner:newest[1]};
+  if(neg&&amount>balance())throw Error("Ya no queda saldo suficiente. Actualizá la caja.");
+  await updateRecord(cfg.role,mv);
+  $("overlay").classList.remove("open");modalType=null;renderDashboard();notify("Movimiento guardado y compartido.");void sync(true);
+ }catch(err){error("mov-error",err.message);btn.disabled=false;btn.textContent="Reintentar"}
+ finally{writing=false}
+}
+function copy(text){if(navigator.clipboard?.writeText){navigator.clipboard.writeText(text).then(()=>notify("Enlace copiado al portapapeles")).catch(()=>prompt("Copiá este enlace:",text))}else prompt("Copiá este enlace:",text)}
+function download(content,mime,name){const u=URL.createObjectURL(new Blob([content],{type:mime})),a=document.createElement("a");a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),2500)}
+function exportFile(type){
+ const movements=type==="csv"?periodMoves():allMoves();
+ if(type==="json"){
+  download(JSON.stringify({fecha:new Date().toISOString(),caja:"La Nueva Gaviota",saldo:balance(),movimientos:movements},null,2),"application/json","respaldo-gaviota-"+nowAR()+".json");
+ }else{
+  const rows=[["Fecha","Hora","Categoria","Concepto","Responsable","Importe ARS"],...movements.map(m=>[m.day,new Date(m.ts).toLocaleTimeString("es-AR",{timeZone:"America/Argentina/Buenos_Aires"}),m.category,m.description,m.author,m.amount])];
+  const esc=x=>'"'+String(x).replaceAll('"','""')+'"';
+  download("\ufeff"+rows.map(r=>r.map(esc).join(";")).join("\r\n"),"text/csv;charset=utf-8","movimientos-gaviota-"+nowAR()+".csv");
+ }
+}
+$("mclose").onclick=()=>$("overlay").classList.remove("open");
+$("overlay").onclick=e=>{if(e.target===$("overlay"))$("overlay").classList.remove("open")};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&cfg?.name)void sync(true)});
+window.addEventListener("online",()=>{if(cfg?.name)void sync()});
+setup();
+</script>
+</body></html>
