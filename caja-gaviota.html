@@ -9,6 +9,13 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 :root{font-family:'DM Sans',system-ui,sans-serif;color:#243c2d;background:#f4f7f2}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.52;cursor:not-allowed}h1,h2,h3,p{margin:0}h1,h2,h3{font-family:Outfit,system-ui,sans-serif;letter-spacing:-.04em}svg{flex-shrink:0}#app{min-height:100dvh}.hidden{display:none!important}.brand{display:flex;gap:12px;align-items:center}.mark{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:#dcece0;color:#1c5d3d}.mark svg{width:31px;height:31px}.brand strong{display:block;font-family:Outfit,sans-serif;font-size:16px;letter-spacing:.01em}.brand small{display:block;font-size:9px;font-weight:800;letter-spacing:.18em;color:#829488;margin-top:2px}.btn{display:inline-flex;justify-content:center;align-items:center;gap:8px;border-radius:11px;padding:13px 17px;border:1px solid #dbe5db;background:white;color:#2e5c41;font-size:13px;font-weight:800;min-height:45px;transition:transform .12s}.btn:active{transform:scale(.98)}.btn.main{background:#1e6045;color:#fff;border-color:#1e6045}.btn.full{width:100%}.btn.text{border:0;background:none;min-height:30px;padding:5px;color:#4f7c5e}.btn.danger{color:#ba5946}.smallbtn{padding:8px 10px;font-size:11px;min-height:34px}.light{color:#84958a}.green{color:#278454!important}.red{color:#bb684e!important}.label{display:block;color:#41604b;font-size:12px;font-weight:800;margin:18px 0 6px}.field{border:1px solid #dfe8df;outline:0;width:100%;border-radius:11px;padding:13px 14px;background:white;color:#243e2d;min-height:48px;font-size:14px;font-weight:600}.field:focus{border-color:#64a378;box-shadow:0 0 0 3px #64a37824}.field::placeholder{color:#a8b6ad}.muted{font-size:12px;color:#8c9f91;line-height:1.65}.warning{margin:15px 0;padding:13px 14px;background:#fff8df;border:1px solid #eee1b4;color:#746334;border-radius:10px;font-size:12px;line-height:1.6}.error{border:1px solid #e4ac9f;background:#fff1ed;color:#a64736;padding:11px 13px;border-radius:9px;font-size:12px;line-height:1.5;margin:14px 0}.info{background:#eaf6ec;color:#2e6946;border-radius:10px;padding:12px 15px;font-size:12px;line-height:1.6;margin:14px 0}.hide{display:none}.auth{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:32px 16px;background:radial-gradient(ellipse at 10% 100%,#dfece0,transparent 35%),#f3f7f2}.auth-inner{width:min(100%,490px)}.auth .brand{justify-content:center;margin-bottom:42px}.welcome{text-align:center;margin-bottom:27px}.welcome .eyebrow,.eyebrow{font-size:10px;font-weight:800;letter-spacing:.2em;color:#6d9479;text-transform:uppercase;margin-bottom:10px}.welcome h1{font-size:clamp(41px,9vw,57px);font-weight:700;line-height:1.05;color:#214730}.welcome h1 em{font-style:normal;color:#70a580}.welcome p{font-size:13px;color:#829688;margin:15px auto 0;max-width:360px;line-height:1.65}.auth-card{background:#fff;border:1px solid #e4ebe4;border-radius:19px;padding:25px;box-shadow:0 16px 60px #1e4c2611}.auth-card h2{font-size:23px}.auth-footer{font-size:10px;color:#a1b0a4;letter-spacing:.12em;font-weight:800;text-align:center;margin-top:25px}.header{background:#fff;border-bottom:1px solid #e1e9e2;height:77px;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1150px)/2))}.rightnav{display:flex;align-items:center;gap:11px}.who{font-size:11px;color:#6e8676;font-weight:700;text-align:right}.who b{display:block;color:#315c43;font-size:13px}.round{width:40px;height:40px;background:#f0f6f0;display:grid;place-items:center;color:#3c7850;border:0;border-radius:12px;font-size:22px}.page{max-width:1150px;padding:40px 25px 65px;margin:auto}.page-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:27px}.page-head h1{font-size:clamp(30px,4vw,43px);font-weight:700}.page-head p{font-size:12px;color:#84968a;margin-top:8px}.actions{display:flex;gap:9px}.balance-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:17px}.balance{background:#184b39;color:#fff;min-height:244px;padding:27px 29px;border-radius:18px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}.balance:after{content:'';position:absolute;right:-100px;top:-110px;width:350px;height:350px;border:46px solid #c2e6c9;border-radius:50%;opacity:.08}.balance-top{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px;letter-spacing:.14em;font-weight:800;color:#c4ddce}.balance-amt{font-family:Outfit,sans-serif;font-size:clamp(39px,5vw,61px);letter-spacing:-.06em;line-height:1.1;font-weight:600;position:relative;z-index:1;overflow-wrap:anywhere}.balance-foot{display:flex;justify-content:space-between;gap:10px;font-size:10px;color:#b9d9c2;position:relative;z-index:1}.dot{display:inline-block;width:8px;height:8px;background:#56b983;border-radius:50%;margin-right:5px}.mini-cards{display:grid;grid-template-rows:1fr 1fr;gap:16px}.mini{background:#fff;border:1px solid #e4eae4;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;justify-content:space-between}.mini .mini-title{font-size:13px;color:#819084;font-weight:700;display:flex;justify-content:space-between}.mini strong{font-family:Outfit,sans-serif;font-size:clamp(25px,3vw,34px);letter-spacing:-.04em}.mini small{color:#9ea99d;font-size:11px}.tabbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:32px 0 16px}.tabbar h2{font-size:19px}.period{display:flex;background:white;padding:4px;gap:3px;border:1px solid #e4e9e4;border-radius:11px}.period button{background:transparent;border:0;padding:9px 13px;border-radius:9px;color:#829486;font-size:12px;font-weight:700}.period button.active{background:#e6f1e8;color:#1e6141}.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}.card{background:#fff;border:1px solid #e5ece4;border-radius:16px;padding:24px}.card h3{font-size:17px;margin-bottom:16px}.sumrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #eff2ed;font-size:13px;color:#758778}.sumrow:last-child{border:0;padding-bottom:0;font-weight:800;color:#2a4736}.sumrow strong{font-family:Outfit;font-size:18px;color:#2c4938}.person{display:flex;align-items:center;gap:12px;margin:15px 0;font-size:12px;font-weight:700}.avatar{width:35px;height:35px;border-radius:11px;background:#deeee4;display:grid;place-items:center;color:#296a47;font-weight:800}.person span:last-child{margin-left:auto;font-size:11px;color:#75a584}.section-title{display:flex;align-items:center;justify-content:space-between;margin:33px 0 15px;gap:10px}.section-title h2{font-size:21px}.section-title p{font-size:12px;color:#93a398;margin-top:4px}.list{background:#fff;border:1px solid #e5ebe4;border-radius:16px;overflow:hidden}.move{display:flex;align-items:center;gap:13px;padding:16px 18px;border-bottom:1px solid #ecf0ea}.move:last-child{border:0}.move-icon{width:41px;height:41px;display:grid;place-items:center;border-radius:12px;background:#e7f4eb;color:#2b8b5a;font-size:21px}.move-icon.out{background:#fff1e9;color:#c16d4c}.movetext{flex:1;min-width:0}.movetext strong{font-size:13px;display:block}.movetext small{display:block;font-size:11px;color:#98a79a;margin-top:4px}.movetext .detail{display:block;color:#718775;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.move-amt{font-family:Outfit;font-size:16px;font-weight:700;white-space:nowrap}.no-data{text-align:center;padding:50px 15px;color:#a2b3a5;font-size:13px}.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:13px}.toolbar .field{max-width:430px}.footer{font-size:11px;color:#95a799;text-align:center;padding:34px 0 0;line-height:1.6}.sync{font-size:11px;color:#659276}.sync.busy{color:#ad8858}.sync.failed{color:#be604b}.alert{border-radius:10px;padding:11px 14px;font-size:12px;line-height:1.5;background:#fff7e5;color:#7e6d40;margin:14px 0}.overlay{position:fixed;inset:0;background:#11271cc7;display:none;justify-content:center;align-items:center;padding:15px;z-index:20}.overlay.open{display:flex}.modal{width:min(100%,470px);background:#fff;border-radius:19px;padding:26px;max-height:calc(100dvh - 30px);overflow:auto}.modalhead{display:flex;align-items:center;justify-content:space-between}.modalhead h2{font-size:25px}.x{background:#f2f5f1;border:0;border-radius:10px;width:33px;height:33px;color:#718c77;font-size:21px}.amount-field{font-family:Outfit;font-size:35px;letter-spacing:-.03em;border:0;border-bottom:2px solid #d7e7db;border-radius:0;padding:6px 0}.toast{position:fixed;right:20px;bottom:20px;background:#215b41;color:#fff;box-shadow:0 12px 44px #1a523e36;border-radius:12px;padding:14px 18px;z-index:30;font-size:12px;display:none;max-width:310px}.toast.show{display:block}.mt{margin-top:15px}.flex{display:flex;gap:10px;align-items:center}.flex .btn{flex:1}.codebox{padding:13px;background:#f0f5ef;border:1px dashed #a8c6ae;border-radius:9px;font-size:12px;word-break:break-all;user-select:all;color:#24583d}.badgemode{border-radius:8px;font-size:10px;letter-spacing:.08em;padding:5px 8px;background:#f1f4ed;color:#859786;font-weight:800}.brandline{margin-top:13px;border-top:1px solid #e2e9df;padding-top:15px}.pill{border-radius:999px;padding:6px 10px;background:#e3f0e6;color:#44835a;font-size:10px;font-weight:800}.bottompanel{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:25px}
+.move-tools{display:flex;gap:4px;margin-top:5px;justify-content:flex-end}
+.move-tools button{border:1px solid #dce7de;background:#f8faf8;border-radius:7px;padding:5px 8px;font-size:10px;font-weight:800;color:#547763}
+.move-tools button.danger{color:#b95645;background:#fff6f2;border-color:#f1dfd7}
+.move-right{text-align:right;flex-shrink:0}
+.danger-btn{border:1px solid #f0d4cf;background:#fff7f4;color:#b45546!important}
+.modal .warn-title{font-size:13px;color:#aa503c;font-weight:800;margin-top:14px}
+@media(max-width:390px){.move-tools button{font-size:10px;padding:5px 6px}.move{gap:7px}}
 @media(max-width:800px){.header{padding:0 20px}.page{padding:29px 16px 45px}.page-head{display:block}.actions{margin-top:20px;width:100%}.actions .btn{flex:1;padding:11px 6px;min-width:0;font-size:12px}.balance-grid{grid-template-columns:1fr;gap:12px}.balance{min-height:209px;padding:24px}.mini-cards{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:12px}.mini{min-height:132px;padding:16px}.mini strong{font-size:clamp(22px,5.2vw,28px);overflow-wrap:anywhere}.mini small{font-size:10px}.tabbar{display:block;margin-top:27px}.tabbar h2{margin-bottom:12px}.period{width:100%;justify-content:space-between}.period button{flex:1;padding:9px 6px;font-size:11px}.two{grid-template-columns:1fr;gap:12px}.card{padding:20px}.move{padding:13px 11px;gap:10px}.move-icon{height:34px;width:34px;font-size:17px}.move-amt{font-size:14px}.header .brand strong{font-size:13px}.header .brand .mark{width:37px;height:37px}.header .brand .mark svg{width:28px}.who{font-size:10px}.who b{font-size:11px}.toolbar{flex-wrap:wrap}.toolbar .field{max-width:none}.modal{align-self:end;border-radius:21px 21px 0 0;max-height:95dvh;padding:24px 20px}.overlay{padding:0;align-items:end}.auth-card{padding:22px 19px}.auth .brand{margin-bottom:35px}.welcome h1{font-size:42px}}
 @media(max-width:350px){.rightnav{gap:3px}.who{display:none}.balance-amt{font-size:38px}.mini strong{font-size:21px}.actions .btn{font-size:11px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -81,6 +88,16 @@ async function req(method,id,content){
 }
 async function newRecord(role,moves=[]){const path=cfg.ns+"/"+role;const enc=await cipher({moves,rev:0});const response=await req("POST",path,enc);if(!response.success)throw Error("No se pudo crear el registro externo.");return path}
 async function getRecord(role){const r=await req("GET",cfg[role+"Id"]);const value=await decipher(r);if(!Array.isArray(value.moves))throw Error("Los movimientos están dañados.");return value}
+async function replaceMoves(role, nextMoves){
+ const data=await getRecord(role);
+ const next={moves:nextMoves,rev:(Number(data.rev)||0)+1};
+ const result=await req("POST",cfg[role+"Id"],await cipher(next));
+ if(!result.success)throw Error("El servicio no confirmó los cambios.");
+ const check=await getRecord(role);
+ if(JSON.stringify(check.moves)!==JSON.stringify(nextMoves))throw Error("No se pudo verificar la modificación. Sincronizá antes de reintentar.");
+ account[role]=check;
+ await saveSnapshot();
+}
 async function updateRecord(role,mov){
  const data=await getRecord(role);
  if(data.moves.some(m=>m.id===mov.id))return;
@@ -91,7 +108,32 @@ async function updateRecord(role,mov){
  if(!check.moves.some(m=>m.id===mov.id))throw Error("La verificación del movimiento falló. No vuelvas a cargar sin revisar el historial.");
  account[role]=check; await saveSnapshot();
 }
-function allMoves(){return [...(account.owner?.moves||[]),...(account.partner?.moves||[])].sort((a,b)=>b.ts.localeCompare(a.ts))}
+function allMoves(){
+ return [
+  ...(account.owner?.moves||[]).map(m=>({...m,sourceRole:"owner"})),
+  ...(account.partner?.moves||[]).map(m=>({...m,sourceRole:"partner"}))
+ ].sort((a,b)=>b.ts.localeCompare(a.ts))
+}
+function canManage(m){return m.amount<0&&(cfg.role==="owner"||m.sourceRole===cfg.role)}
+function findMovement(id){return allMoves().find(m=>m.id===id)}
+async function modifyExpense(id, change){
+ const original=findMovement(id);
+ if(!original||!canManage(original))throw Error("No tenés permiso para modificar este gasto.");
+ const [owner,partner]=await Promise.all([getRecord("owner"),getRecord("partner")]);
+ account={owner,partner};
+ const role=original.sourceRole;
+ const latest=account[role].moves.find(m=>m.id===id);
+ if(!latest||latest.amount>=0)throw Error("El gasto ya no existe. Actualizá la caja.");
+ const revised=change===null?null:{
+  ...latest,amount:-change.amount,category:change.category,description:change.description,
+  updatedAt:new Date().toISOString(),updatedBy:cfg.name
+ };
+ const newBalance=balance()-latest.amount+(revised?.amount||0);
+ if(newBalance<0)throw Error("El cambio supera el efectivo disponible. Saldo resultante: "+money(newBalance));
+ const next=account[role].moves.flatMap(m=>m.id===id?(revised?[revised]:[]):[m]);
+ await replaceMoves(role,next);
+ return {deleted:revised===null};
+}
 function balance(){return allMoves().reduce((a,m)=>a+m.amount,0)}
 function datePass(d){if(period==="todo")return true;const now=nowAR();if(period==="hoy")return d===now;if(period==="mes")return d.slice(0,7)===now.slice(0,7);const a=new Date(d+"T12:00:00-03:00"),b=new Date(now+"T12:00:00-03:00");return a<=b&&a>=new Date(b.getTime()-6*86400000)}
 function periodMoves(){return allMoves().filter(m=>datePass(m.day))}
@@ -141,7 +183,9 @@ function renderAuth(mode){
 }
 function periodButtons(){return ['hoy','semana','mes','todo'].map(p=>'<button data-period="'+p+'" class="'+(p===period?'active':'')+'">'+({hoy:"Hoy",semana:"7 días",mes:"Este mes",todo:"Todo"}[p])+'</button>').join("")}
 function moveHTML(m){
- const neg=m.amount<0;return '<div class="move"><div class="move-icon '+(neg?'out':'')+'">'+(neg?'↓':'↑')+'</div><div class="movetext"><strong>'+clean(m.category)+'</strong><span class="detail">'+clean(m.description||m.category)+'</span><small>'+clean(m.author)+' · '+clean(day(m.day))+' · '+new Date(m.ts).toLocaleTimeString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",hour:"2-digit",minute:"2-digit"})+'</small></div><strong class="move-amt '+(neg?'red':'green')+'">'+(neg?'−':'+')+money(Math.abs(m.amount))+'</strong></div>';
+ const neg=m.amount<0;
+ const tools=canManage(m)?'<div class="move-tools"><button type="button" data-edit="'+clean(m.id)+'" aria-label="Editar gasto">Editar</button><button type="button" class="danger" data-delete="'+clean(m.id)+'" aria-label="Eliminar gasto">Eliminar</button></div>':'';
+ return '<div class="move"><div class="move-icon '+(neg?'out':'')+'">'+(neg?'↓':'↑')+'</div><div class="movetext"><strong>'+clean(m.category)+'</strong><span class="detail">'+clean(m.description||m.category)+'</span><small>'+clean(m.author)+' · '+clean(day(m.day))+' · '+new Date(m.ts).toLocaleTimeString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",hour:"2-digit",minute:"2-digit"})+(m.updatedAt?' · Editado':'')+'</small></div><div class="move-right"><strong class="move-amt '+(neg?'red':'green')+'">'+(neg?'−':'+')+money(Math.abs(m.amount))+'</strong>'+tools+'</div></div>';
 }
 function renderDashboard(){
  if(!cfg)return;
@@ -153,13 +197,16 @@ function renderDashboard(){
  '<div class="section-title"><div><h2>Últimos movimientos</h2><p>Todo lo que entra y sale del billar</p></div><button class="btn text" id="more">Ver todos →</button></div><section class="list">'+(movements.length?movements.slice(0,7).map(moveHTML).join(""):'<div class="no-data">Todavía no hay movimientos en este período.</div>')+'</section>':
  '<div class="toolbar"><input class="field" id="search" value="'+clean(search)+'" placeholder="Buscar gastos, concepto o persona..."><button id="export" class="btn">⇩ Exportar CSV</button></div>'+
  '<div class="tabbar"><h2>'+filtered.length+' movimientos</h2><div class="period">'+periodButtons()+'</div></div><section class="list">'+(filtered.length?filtered.map(moveHTML).join(""):'<div class="no-data">No hay movimientos en este período.</div>')+'</section>')+
- '<div class="bottompanel"><button class="btn smallbtn" id="toggleview">'+(screen==="inicio"?"Historial completo":"Volver al resumen")+'</button><button class="btn smallbtn" id="backup">⇩ Descargar respaldo</button>'+(cfg.role==="owner"?'<button class="btn smallbtn" id="invite2">Compartir con socio</button>':'')+'</div>'+
+ '<div class="bottompanel"><button class="btn smallbtn" id="toggleview">'+(screen==="inicio"?"Historial completo":"Volver al resumen")+'</button><button class="btn smallbtn" id="backup">⇩ Descargar respaldo</button>'+(cfg.role==="owner"?'<button class="btn smallbtn" id="invite2">Compartir con socio</button><button class="btn smallbtn danger-btn" id="resetbox">Vaciar caja</button>':'')+'</div>'+
  '<div class="footer">Registro temporal independiente del sistema BILLAR POS.<br>No sustituye un cierre de caja auditado. Guardá respaldos frecuentes.</div></main>';
  $("refresh").onclick=()=>sync();
  $("addexpense").onclick=()=>openModal("gasto");
  if($("addmoney"))$("addmoney").onclick=()=>openModal("ingreso");
  if($("invite"))$("invite").onclick=()=>openModal("invitar");
  if($("invite2"))$("invite2").onclick=()=>openModal("invitar");
+ if($("resetbox"))$("resetbox").onclick=()=>openModal("reiniciar");
+ document.querySelectorAll("[data-edit]").forEach(button=>button.onclick=()=>openModal("editar",findMovement(button.dataset.edit)));
+ document.querySelectorAll("[data-delete]").forEach(button=>button.onclick=()=>openModal("eliminar",findMovement(button.dataset.delete)));
  if($("more"))$("more").onclick=()=>{screen="movimientos";renderDashboard()};
  $("toggleview").onclick=()=>{screen=screen==="inicio"?"movimientos":"inicio";renderDashboard()};
  $("backup").onclick=()=>exportFile("json");
@@ -167,42 +214,87 @@ function renderDashboard(){
  if($("search"))$("search").oninput=(e)=>{const position=e.target.selectionStart;search=e.target.value;renderDashboard();$("search")?.focus();$("search")?.setSelectionRange(position,position)};
  document.querySelectorAll("[data-period]").forEach(b=>b.onclick=()=>{period=b.dataset.period;renderDashboard()});
 }
-function openModal(type){
+function openModal(type,movement=null){
  modalType=type;const over=$("overlay"),body=$("mbody"),title=$("mtitle");
- title.textContent={gasto:"Registrar gasto",ingreso:"Agregar efectivo",invitar:"Compartir con tu socio"}[type];
+ title.textContent={gasto:"Registrar gasto",ingreso:"Agregar efectivo",invitar:"Compartir con tu socio",editar:"Editar gasto",eliminar:"Eliminar gasto",reiniciar:"Vaciar todos los datos"}[type];
  if(type==="invitar"){
   body.innerHTML='<p class="muted mt">Este enlace abre la misma caja en el celular de tu socio. Mandáselo por WhatsApp.</p>'+
   '<label class="label">Enlace para tu socio</label><div class="codebox" id="partnerLink">'+clean(shareLink("partner"))+'</div><button id="copyInvite" class="btn main full mt">Copiar enlace del socio</button>'+
   '<div class="brandline"><h3 style="font-size:14px;margin-bottom:8px">Tu acceso de administrador</h3><p class="muted">Guardá este enlace privado para recuperar tu acceso en otro dispositivo.</p><button class="btn full mt" id="copyOwner">Copiar mi acceso</button></div>'+
   '<div class="warning">Importante: estos enlaces son privados. Quien tenga uno podría acceder al contenido. Se trata de una herramienta provisoria.</div>';
   $("copyInvite").onclick=()=>copy(shareLink("partner"));$("copyOwner").onclick=()=>copy(shareLink("owner"));
+ }else if(type==="reiniciar"){
+  if(cfg.role!=="owner"){notify("Solo el administrador puede vaciar la caja.");return}
+  body.innerHTML='<div class="warning"><strong>Atención:</strong> esta acción borra todos los ingresos y gastos registrados por ambos usuarios. El saldo volverá a <strong>$ 0</strong>. Esta operación no se puede deshacer.</div>'+
+   '<p class="muted mt">Movimientos actuales: <strong>'+allMoves().length+'</strong>. Efectivo registrado: <strong>'+money(balance())+'</strong>.</p>'+
+   '<label class="label" for="confirmreset">Para confirmar, escribí BORRAR</label><input autocomplete="off" class="field" id="confirmreset" placeholder="BORRAR">'+
+   '<div id="reset-error"></div><button type="button" class="btn danger-btn full mt" id="resetBtn" disabled>Eliminar todos los datos y dejar en cero</button>'+
+   '<button class="btn full mt" id="resetBackup">Descargar respaldo antes de borrar</button>';
+  $("confirmreset").oninput=()=>{$("resetBtn").disabled=$("confirmreset").value.trim().toUpperCase()!=="BORRAR"};
+  $("resetBackup").onclick=()=>exportFile("json");
+  $("resetBtn").onclick=async()=>{
+   if(writing||$("confirmreset").value.trim().toUpperCase()!=="BORRAR")return;
+   writing=true;$("resetBtn").disabled=true;$("resetBtn").textContent="Reiniciando caja...";
+   try{const [a,b]=await Promise.all([getRecord("owner"),getRecord("partner")]);account={owner:a,partner:b};
+    for(const role of ["owner","partner"]){
+     const current=account[role];
+     const ok=await req("POST",cfg[role+"Id"],await cipher({moves:[],rev:(Number(current.rev)||0)+1}));
+     if(!ok.success)throw Error("No se completó el borrado. Volvé a intentar.");
+     const check=await getRecord(role);
+     if(check.moves.length!==0)throw Error("Falló la verificación del borrado.");
+     account[role]=check;
+    }
+    await saveSnapshot();
+    $("overlay").classList.remove("open");modalType=null;renderDashboard();notify("Caja vaciada. Saldo disponible: $ 0.");void sync(true);
+   }catch(e){error("reset-error",e.message);$("resetBtn").disabled=false;$("resetBtn").textContent="Reintentar borrado"}
+   finally{writing=false}
+  };
+ }else if(type==="eliminar"){
+  if(!movement||!canManage(movement))return;
+  body.innerHTML='<p class="muted mt">Vas a eliminar este gasto de la caja compartida. Se devolverá su importe al saldo.</p>'+
+  '<div class="warning"><strong>'+clean(movement.category)+'</strong><br>'+clean(movement.description)+'<br><strong>'+money(Math.abs(movement.amount))+'</strong></div>'+
+  '<div id="delete-error"></div><button class="btn danger-btn full mt" id="confirmdelete">Sí, eliminar este gasto</button><button class="btn full mt" id="canceldelete">Cancelar</button>';
+  $("canceldelete").onclick=()=>closeModal();
+  $("confirmdelete").onclick=async()=>{
+   if(writing)return;writing=true;$("confirmdelete").disabled=true;$("confirmdelete").textContent="Eliminando...";
+   try{await modifyExpense(movement.id,null);closeModal();renderDashboard();notify("Gasto eliminado. El saldo se actualizó.");void sync(true)}
+   catch(e){error("delete-error",e.message);$("confirmdelete").disabled=false;$("confirmdelete").textContent="Reintentar"}
+   finally{writing=false}
+  };
  }else{
-  const inputDesc=type==="gasto"?"Ej. Compré 2 fardos de gaseosas":"Ej. Dinero agregado para reponer caja";
-  const choices=type==="gasto"?["Mercadería","Sueldos","Servicios","Mantenimiento","Limpieza","Compras","Otros gastos"]:["Aporte de efectivo","Reposición de caja","Devolución","Otros ingresos"];
-  body.innerHTML='<p class="muted mt">'+(type==="gasto"?"Se descuenta automáticamente del efectivo disponible.":"Se suma al saldo disponible de la caja.")+'</p>'+
-   '<form id="movform"><label class="label" for="movamount">Monto (pesos argentinos)</label><input id="movamount" inputmode="numeric" class="field amount-field" required placeholder="$ 0">'+
+  const edit=type==="editar";if(edit&&(!movement||!canManage(movement)))return;
+  const inputDesc=(type==="gasto"||edit)?"Ej. Compré 2 fardos de gaseosas":"Ej. Dinero agregado para reponer caja";
+  const choices=(type==="gasto"||edit)?["Mercadería","Sueldos","Servicios","Mantenimiento","Limpieza","Compras","Otros gastos"]:["Aporte de efectivo","Reposición de caja","Devolución","Otros ingresos"];
+  body.innerHTML='<p class="muted mt">'+(edit?"Cambiá el monto, la categoría o el detalle. El saldo se recalculará automáticamente.":type==="gasto"?"Se descuenta automáticamente del efectivo disponible.":"Se suma al saldo disponible de la caja.")+'</p>'+
+   '<form id="movform"><label class="label" for="movamount">Monto (pesos argentinos)</label><input id="movamount" inputmode="numeric" class="field amount-field" required placeholder="$ 0" value="'+(edit?Math.abs(movement.amount):"")+'">'+
    '<p class="muted" style="margin-top:7px">Disponible: '+money(balance())+'</p>'+
    '<label class="label" for="movcat">Categoría</label><select class="field" id="movcat">'+choices.map(x=>'<option>'+clean(x)+'</option>').join("")+'</select>'+
-   '<label class="label" for="movdesc">¿En qué se gastó?</label><textarea id="movdesc" class="field" rows="3" maxlength="180" placeholder="'+clean(inputDesc)+'"></textarea><div id="mov-error"></div><button class="btn main full mt" id="movsave">Confirmar '+(type==="gasto"?"gasto":"ingreso")+'</button></form>';
+   '<label class="label" for="movdesc">¿En qué se gastó?</label><textarea id="movdesc" class="field" rows="3" maxlength="180" placeholder="'+clean(inputDesc)+'">'+(edit?clean(movement.description):"")+'</textarea><div id="mov-error"></div><button class="btn main full mt" id="movsave">'+(edit?"Guardar cambios":"Confirmar "+(type==="gasto"?"gasto":"ingreso"))+'</button></form>';
   if(type==="ingreso")document.querySelector('label[for="movdesc"]').textContent="Concepto del ingreso";
-  $("movform").onsubmit=saveMovement;
+  if(edit){$("movcat").value=choices.includes(movement.category)?movement.category:"Otros gastos";$("movform").onsubmit=(e)=>saveMovement(e,movement.id);}
+  else $("movform").onsubmit=saveMovement;
  }
  over.classList.add("open");
 }
-async function saveMovement(e){
+function closeModal(){$("overlay").classList.remove("open");modalType=null}
+async function saveMovement(e,editId=null){
  e.preventDefault();if(writing)return;
- const amount=int($("movamount").value),neg=modalType==="gasto";
+ const amount=int($("movamount").value),neg=modalType==="gasto"||modalType==="editar";
  if(amount<=0||amount>100000000)return error("mov-error","Ingresá un monto válido.");
- if(neg&&amount>balance())return error("mov-error","El monto supera el efectivo disponible.");
+ if(neg&&!editId&&amount>balance())return error("mov-error","El monto supera el efectivo disponible.");
  const mv={id:makeID(),ts:new Date().toISOString(),day:nowAR(),amount:neg?-amount:amount,category:$("movcat").value,description:$("movdesc").value.trim(),author:cfg.name};
  const btn=$("movsave");btn.disabled=true;btn.textContent="Registrando...";
  writing=true;
  try{
   const newest=await Promise.all([getRecord("owner"),getRecord("partner")]);
   account={owner:newest[0],partner:newest[1]};
-  if(neg&&amount>balance())throw Error("Ya no queda saldo suficiente. Actualizá la caja.");
-  await updateRecord(cfg.role,mv);
-  $("overlay").classList.remove("open");modalType=null;renderDashboard();notify("Movimiento guardado y compartido.");void sync(true);
+  if(neg&&!editId&&amount>balance())throw Error("Ya no queda saldo suficiente. Actualizá la caja.");
+  if(editId){
+   await modifyExpense(editId,{amount,category:mv.category,description:mv.description});
+  }else{
+   await updateRecord(cfg.role,mv);
+  }
+  closeModal();renderDashboard();notify(editId?"Gasto actualizado. Saldo recalculado.":"Movimiento guardado y compartido.");void sync(true);
  }catch(err){error("mov-error",err.message);btn.disabled=false;btn.textContent="Reintentar"}
  finally{writing=false}
 }
