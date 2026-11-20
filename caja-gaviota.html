@@ -15,6 +15,16 @@
 .move-right{text-align:right;flex-shrink:0}
 .danger-btn{border:1px solid #f0d4cf;background:#fff7f4;color:#b45546!important}
 .modal .warn-title{font-size:13px;color:#aa503c;font-weight:800;margin-top:14px}
+.receipt-row{margin-top:8px}.receipt-attach{display:flex;align-items:center;gap:7px;font-size:11px;color:#33805a;font-weight:800;border:0;background:#ecf7ef;border-radius:7px;padding:7px 9px;max-width:max-content}
+.receipt-attach:focus-visible{outline:3px solid #a5d5af}
+.receipt-input{font-size:12px;min-height:48px;padding:10px}.receipt-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.receipt-pill{border:1px solid #e1ebe1;border-radius:10px;background:#f8fbf7;padding:7px;display:flex;align-items:center;gap:8px;max-width:100%}
+.receipt-pill img{width:49px;height:52px;object-fit:cover;border-radius:6px;background:#e2eae0}
+.receipt-pill span{font-size:11px;color:#547460;font-weight:800}
+.receipt-pill button{border:0;background:#fae8e4;color:#b75947;border-radius:7px;padding:5px 8px;font-size:11px;font-weight:800}
+.receipt-view{display:flex;flex-direction:column;gap:8px;margin:15px 0}
+.receipt-view img{max-width:100%;height:auto;max-height:65dvh;object-fit:contain;border-radius:10px;border:1px solid #dee9df;background:white}
+.receipt-hint{font-size:11px;color:#78917f;line-height:1.55;margin-top:8px}
 @media(max-width:390px){.move-tools button{font-size:10px;padding:5px 6px}.move{gap:7px}}
 @media(max-width:800px){.header{padding:0 20px}.page{padding:29px 16px 45px}.page-head{display:block}.actions{margin-top:20px;width:100%}.actions .btn{flex:1;padding:11px 6px;min-width:0;font-size:12px}.balance-grid{grid-template-columns:1fr;gap:12px}.balance{min-height:209px;padding:24px}.mini-cards{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:12px}.mini{min-height:132px;padding:16px}.mini strong{font-size:clamp(22px,5.2vw,28px);overflow-wrap:anywhere}.mini small{font-size:10px}.tabbar{display:block;margin-top:27px}.tabbar h2{margin-bottom:12px}.period{width:100%;justify-content:space-between}.period button{flex:1;padding:9px 6px;font-size:11px}.two{grid-template-columns:1fr;gap:12px}.card{padding:20px}.move{padding:13px 11px;gap:10px}.move-icon{height:34px;width:34px;font-size:17px}.move-amt{font-size:14px}.header .brand strong{font-size:13px}.header .brand .mark{width:37px;height:37px}.header .brand .mark svg{width:28px}.who{font-size:10px}.who b{font-size:11px}.toolbar{flex-wrap:wrap}.toolbar .field{max-width:none}.modal{align-self:end;border-radius:21px 21px 0 0;max-height:95dvh;padding:24px 20px}.overlay{padding:0;align-items:end}.auth-card{padding:22px 19px}.auth .brand{margin-bottom:35px}.welcome h1{font-size:42px}}
 @media(max-width:350px){.rightnav{gap:3px}.who{display:none}.balance-amt{font-size:38px}.mini strong{font-size:21px}.actions .btn{font-size:11px}}
@@ -30,6 +40,8 @@
 const API="https://mantledb.sh/v2";
 const LS="gaviota_cash_temp_v2"; const SNAP="gaviota_cash_backup_v2_";
 let cfg=null, account={owner:null,partner:null},screen="inicio",period="mes",search="",loading=false,modalType=null,syncTimer=null,writing=false,inviting=false;
+const MAX_RECEIPTS=2, RECEIPT_BYTE_LIMIT=44000;
+let selectedReceipts=[],keptReceipts=[],tempImageURLs=[],modalImageURLs=[];
 const $=(id)=>document.getElementById(id);
 const clean=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=(v)=>new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(v);
@@ -45,7 +57,7 @@ function brand(){return '<div class="brand">'+icon()+'<div><strong>LA NUEVA GAVI
 function notify(t){const n=$("toast");n.textContent=t;n.classList.add("show");setTimeout(()=>n.classList.remove("show"),3500)}
 function error(id,msg){const e=$(id);if(e)e.innerHTML=msg?'<div class="error" role="alert">'+clean(msg)+'</div>':""}
 function syncLabel(s,cls=""){const t=$("sync-label");if(t){t.className="sync "+cls;t.textContent=s}}
-function getHash(){const params=new URLSearchParams(location.hash.replace(/^#/,""));const c=params.get("c");if(!c)return null;const parts=c.split(".");if(parts.length!==3||parts.some(x=>!x)||parts[2].length<40)return null;return {ownerId:parts[0],partnerId:parts[1],key:parts[2],role:params.get("r")==="p"?"partner":"owner"}}
+function getHash(){const params=new URLSearchParams(location.hash.replace(/^#/,""));const c=params.get("c");if(!c)return null;const parts=c.split(".");if(parts.length!==3||parts.some(x=>!x)||parts[2].length<40)return null;return {ownerId:parts[0],partnerId:parts[1],ns:parts[0].split("/")[0],key:parts[2],role:params.get("r")==="p"?"partner":"owner"}}
 function shareLink(role){return location.origin+location.pathname+"#c="+cfg.ownerId+"."+cfg.partnerId+"."+cfg.key+"&r="+(role==="partner"?"p":"o")}
 function saveConfig(){localStorage.setItem(LS,JSON.stringify(cfg))}
 async function saveSnapshot(){
@@ -85,6 +97,71 @@ async function req(method,id,content){
   if(!res.ok)throw Error("El servicio de datos respondió con error "+res.status);
   return await res.json();
  }finally{clearTimeout(timeout)}
+}
+function receiptEntries(m){return Array.isArray(m?.receipts)?m.receipts.filter(r=>r&&typeof r.id==="string"&&r.id.startsWith(cfg.ns+"/receipt-")):[]}
+function cleanupURLs(list){while(list.length){try{URL.revokeObjectURL(list.pop())}catch{}}}
+function receiptStorageId(){return cfg.ns+"/receipt-"+makeID()}
+async function encryptPhoto(bytesIn){
+ const key=await crypto.subtle.importKey("raw",bytes(cfg.key),"AES-GCM",false,["encrypt"]);
+ const iv=rand(12),ciphertext=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,bytesIn);
+ return {v:1,mime:"image/jpeg",iv:b64(iv),cipher:b64(new Uint8Array(ciphertext))};
+}
+async function decryptPhoto(payload){
+ if(!payload?.iv||!payload?.cipher||payload.mime!=="image/jpeg")throw Error("Comprobante inválido.");
+ const key=await crypto.subtle.importKey("raw",bytes(cfg.key),"AES-GCM",false,["decrypt"]);
+ const raw=await crypto.subtle.decrypt({name:"AES-GCM",iv:bytes(payload.iv)},key,bytes(payload.cipher));
+ return new Blob([raw],{type:"image/jpeg"});
+}
+async function compressPhoto(file){
+ if(!file||!file.type.startsWith("image/"))throw Error("Seleccioná una foto en formato de imagen.");
+ if(file.size>18*1024*1024)throw Error("La imagen supera 18 MB. Sacá otra foto del comprobante.");
+ const url=URL.createObjectURL(file);
+ const img=new Image();
+ try{await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("No se puede abrir esta foto. Probá con JPG o PNG."));img.src=url;});}
+ finally{URL.revokeObjectURL(url)}
+ if(!img.naturalWidth||!img.naturalHeight)throw Error("Imagen dañada.");
+ const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
+ if(!ctx)throw Error("Este navegador no permite procesar la foto.");
+ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+ for(const dim of [1400,1200,1050,900,760,660]){
+  const scale=Math.min(1,dim/Math.max(img.naturalWidth,img.naturalHeight));
+  canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+  canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+  ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  for(const quality of [.72,.57,.44,.32,.24]){
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));
+   if(blob&&blob.size>0&&blob.size<=RECEIPT_BYTE_LIMIT)return blob;
+  }
+ }
+ throw Error("La foto es demasiado compleja para el almacenamiento gratuito. Acercate al ticket y volvé a sacarla.");
+}
+async function saveReceipt(file){
+ const blob=await compressPhoto(file);
+ const packed=await encryptPhoto(await blob.arrayBuffer());
+ const id=receiptStorageId();
+ const result=await req("POST",id,packed);
+ if(!result?.success)throw Error("No se pudo subir la foto del comprobante.");
+ const confirm=await req("GET",id);
+ if(!confirm?.cipher||confirm.cipher!==packed.cipher)throw Error("La foto no se guardó correctamente.");
+ return {id,createdAt:new Date().toISOString(),size:blob.size};
+}
+async function receiptBlob(item){return decryptPhoto(await req("GET",item.id))}
+async function deleteReceipt(item){try{await req("DELETE",item.id)}catch(e){console.warn("No se pudo eliminar comprobante",e)}}
+function previewReceiptInput(){
+ const target=$("receiptPreview");if(!target)return;
+ cleanupURLs(tempImageURLs);
+ target.innerHTML=keptReceipts.map((r,i)=>'<div class="receipt-pill"><span>📎 Foto guardada '+(i+1)+'</span><button type="button" data-unlink="'+clean(r.id)+'">Quitar</button></div>').join("");
+ for(const item of selectedReceipts){
+  const url=URL.createObjectURL(item);tempImageURLs.push(url);
+  const el=document.createElement("div");el.className="receipt-pill";
+  const photo=document.createElement("img");photo.src=url;photo.alt="Foto elegida del comprobante";
+  const label=document.createElement("span");label.textContent=item.name||"Nueva foto";
+  const remove=document.createElement("button");remove.type="button";remove.textContent="Quitar";
+  remove.onclick=()=>{selectedReceipts=selectedReceipts.filter(x=>x!==item);previewReceiptInput()};
+  el.append(photo,label,remove);target.append(el);
+ }
+ target.querySelectorAll("[data-unlink]").forEach(b=>b.onclick=()=>{keptReceipts=keptReceipts.filter(r=>r.id!==b.dataset.unlink);previewReceiptInput()});
+ const label=$("receiptHelp");if(label)label.textContent="Hasta "+MAX_RECEIPTS+" fotos por gasto · "+(keptReceipts.length+selectedReceipts.length)+"/"+MAX_RECEIPTS+" seleccionadas. Se comprimen automáticamente.";
 }
 async function newRecord(role,moves=[]){const path=cfg.ns+"/"+role;const enc=await cipher({moves,rev:0});const response=await req("POST",path,enc);if(!response.success)throw Error("No se pudo crear el registro externo.");return path}
 async function getRecord(role){const r=await req("GET",cfg[role+"Id"]);const value=await decipher(r);if(!Array.isArray(value.moves))throw Error("Los movimientos están dañados.");return value}
@@ -126,6 +203,7 @@ async function modifyExpense(id, change){
  if(!latest||latest.amount>=0)throw Error("El gasto ya no existe. Actualizá la caja.");
  const revised=change===null?null:{
   ...latest,amount:-change.amount,category:change.category,description:change.description,
+  receipts:Array.isArray(change.receipts)?change.receipts:receiptEntries(latest),
   updatedAt:new Date().toISOString(),updatedBy:cfg.name
  };
  const newBalance=balance()-latest.amount+(revised?.amount||0);
@@ -149,6 +227,7 @@ function setup(){
  const hash=getHash(),saved=JSON.parse(localStorage.getItem(LS)||"null");
  if(hash){cfg={...hash,name:""}; if(saved&&saved.ownerId===hash.ownerId&&saved.partnerId===hash.partnerId&&saved.role===hash.role)cfg.name=saved.name||"";}
  else cfg=saved;
+ if(cfg&&!cfg.ns&&cfg.ownerId)cfg.ns=cfg.ownerId.split("/")[0];
  if(!cfg||!cfg.name){renderAuth(hash?"join":"create");return}
  $("app").dataset.logged="yes";renderDashboard();void sync();syncTimer=setInterval(()=>{void sync(true)},9000);
 }
@@ -184,8 +263,10 @@ function renderAuth(mode){
 function periodButtons(){return ['hoy','semana','mes','todo'].map(p=>'<button data-period="'+p+'" class="'+(p===period?'active':'')+'">'+({hoy:"Hoy",semana:"7 días",mes:"Este mes",todo:"Todo"}[p])+'</button>').join("")}
 function moveHTML(m){
  const neg=m.amount<0;
+ const receiptCount=receiptEntries(m).length;
+ const showReceipt=receiptCount?'<div class="receipt-row"><button type="button" class="receipt-attach" data-receipts="'+clean(m.id)+'">📎 Ver '+receiptCount+' '+(receiptCount===1?'comprobante':'comprobantes')+'</button></div>':'';
  const tools=canManage(m)?'<div class="move-tools"><button type="button" data-edit="'+clean(m.id)+'" aria-label="Editar gasto">Editar</button><button type="button" class="danger" data-delete="'+clean(m.id)+'" aria-label="Eliminar gasto">Eliminar</button></div>':'';
- return '<div class="move"><div class="move-icon '+(neg?'out':'')+'">'+(neg?'↓':'↑')+'</div><div class="movetext"><strong>'+clean(m.category)+'</strong><span class="detail">'+clean(m.description||m.category)+'</span><small>'+clean(m.author)+' · '+clean(day(m.day))+' · '+new Date(m.ts).toLocaleTimeString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",hour:"2-digit",minute:"2-digit"})+(m.updatedAt?' · Editado':'')+'</small></div><div class="move-right"><strong class="move-amt '+(neg?'red':'green')+'">'+(neg?'−':'+')+money(Math.abs(m.amount))+'</strong>'+tools+'</div></div>';
+ return '<div class="move"><div class="move-icon '+(neg?'out':'')+'">'+(neg?'↓':'↑')+'</div><div class="movetext"><strong>'+clean(m.category)+'</strong><span class="detail">'+clean(m.description||m.category)+'</span><small>'+clean(m.author)+' · '+clean(day(m.day))+' · '+new Date(m.ts).toLocaleTimeString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",hour:"2-digit",minute:"2-digit"}) +(m.updatedAt?' · Editado':'')+'</small>'+showReceipt+'</div><div class="move-right"><strong class="move-amt '+(neg?'red':'green')+'">'+(neg?'−':'+')+money(Math.abs(m.amount))+'</strong>'+tools+'</div></div>';
 }
 function renderDashboard(){
  if(!cfg)return;
@@ -205,6 +286,7 @@ function renderDashboard(){
  if($("invite"))$("invite").onclick=()=>openModal("invitar");
  if($("invite2"))$("invite2").onclick=()=>openModal("invitar");
  if($("resetbox"))$("resetbox").onclick=()=>openModal("reiniciar");
+ document.querySelectorAll("[data-receipts]").forEach(button=>button.onclick=()=>openModal("comprobantes",findMovement(button.dataset.receipts)));
  document.querySelectorAll("[data-edit]").forEach(button=>button.onclick=()=>openModal("editar",findMovement(button.dataset.edit)));
  document.querySelectorAll("[data-delete]").forEach(button=>button.onclick=()=>openModal("eliminar",findMovement(button.dataset.delete)));
  if($("more"))$("more").onclick=()=>{screen="movimientos";renderDashboard()};
@@ -215,14 +297,38 @@ function renderDashboard(){
  document.querySelectorAll("[data-period]").forEach(b=>b.onclick=()=>{period=b.dataset.period;renderDashboard()});
 }
 function openModal(type,movement=null){
+ cleanupURLs(tempImageURLs);cleanupURLs(modalImageURLs);
+ selectedReceipts=[];keptReceipts=[];
  modalType=type;const over=$("overlay"),body=$("mbody"),title=$("mtitle");
- title.textContent={gasto:"Registrar gasto",ingreso:"Agregar efectivo",invitar:"Compartir con tu socio",editar:"Editar gasto",eliminar:"Eliminar gasto",reiniciar:"Vaciar todos los datos"}[type];
+ title.textContent={gasto:"Registrar gasto",ingreso:"Agregar efectivo",invitar:"Compartir con tu socio",editar:"Editar gasto",eliminar:"Eliminar gasto",reiniciar:"Vaciar todos los datos",comprobantes:"Fotos del comprobante"}[type];
  if(type==="invitar"){
   body.innerHTML='<p class="muted mt">Este enlace abre la misma caja en el celular de tu socio. Mandáselo por WhatsApp.</p>'+
   '<label class="label">Enlace para tu socio</label><div class="codebox" id="partnerLink">'+clean(shareLink("partner"))+'</div><button id="copyInvite" class="btn main full mt">Copiar enlace del socio</button>'+
   '<div class="brandline"><h3 style="font-size:14px;margin-bottom:8px">Tu acceso de administrador</h3><p class="muted">Guardá este enlace privado para recuperar tu acceso en otro dispositivo.</p><button class="btn full mt" id="copyOwner">Copiar mi acceso</button></div>'+
   '<div class="warning">Importante: estos enlaces son privados. Quien tenga uno podría acceder al contenido. Se trata de una herramienta provisoria.</div>';
   $("copyInvite").onclick=()=>copy(shareLink("partner"));$("copyOwner").onclick=()=>copy(shareLink("owner"));
+ }else if(type==="comprobantes"){
+  if(!movement)return;
+  const entries=receiptEntries(movement);
+  body.innerHTML='<p class="muted mt">'+entries.length+' '+(entries.length===1?'foto adjunta':'fotos adjuntas')+' al gasto de '+money(Math.abs(movement.amount))+'.</p>'+
+  '<div id="receiptGallery"><div class="no-data">Abriendo fotos...</div></div>'+
+  '<div class="receipt-hint">Podés mantener presionada la foto para guardarla en el teléfono o usar Descargar.</div>';
+  (async()=>{
+   const gallery=$("receiptGallery");if(!entries.length){gallery.innerHTML='<p class="muted">Este gasto no tiene comprobantes.</p>';return}
+   gallery.innerHTML="";
+   for(let i=0;i<entries.length;i++){
+    const panel=document.createElement("div");panel.className="receipt-view";
+    gallery.append(panel);
+    try{
+     const blob=await receiptBlob(entries[i]);
+     if(modalType!=="comprobantes"){return}
+     const url=URL.createObjectURL(blob);modalImageURLs.push(url);
+     const img=document.createElement("img");img.src=url;img.alt="Foto del comprobante "+(i+1);
+     const link=document.createElement("a");link.href=url;link.download="comprobante-"+movement.day+"-"+(i+1)+".jpg";link.className="btn";link.textContent="⇩ Descargar foto "+(i+1);
+     panel.append(img,link);
+    }catch(e){panel.innerHTML='<div class="error">No se pudo abrir la foto '+(i+1)+': '+clean(e.message)+'</div>'}
+   }
+  })();
  }else if(type==="reiniciar"){
   if(cfg.role!=="owner"){notify("Solo el administrador puede vaciar la caja.");return}
   body.innerHTML='<div class="warning"><strong>Atención:</strong> esta acción borra todos los ingresos y gastos registrados por ambos usuarios. El saldo volverá a <strong>$ 0</strong>. Esta operación no se puede deshacer.</div>'+
@@ -236,6 +342,7 @@ function openModal(type,movement=null){
    if(writing||$("confirmreset").value.trim().toUpperCase()!=="BORRAR")return;
    writing=true;$("resetBtn").disabled=true;$("resetBtn").textContent="Reiniciando caja...";
    try{const [a,b]=await Promise.all([getRecord("owner"),getRecord("partner")]);account={owner:a,partner:b};
+    const attachments=[...new Map(allMoves().flatMap(receiptEntries).map(x=>[x.id,x])).values()];
     for(const role of ["owner","partner"]){
      const current=account[role];
      const ok=await req("POST",cfg[role+"Id"],await cipher({moves:[],rev:(Number(current.rev)||0)+1}));
@@ -245,7 +352,8 @@ function openModal(type,movement=null){
      account[role]=check;
     }
     await saveSnapshot();
-    $("overlay").classList.remove("open");modalType=null;renderDashboard();notify("Caja vaciada. Saldo disponible: $ 0.");void sync(true);
+    closeModal();renderDashboard();notify("Caja vaciada. Saldo disponible: $ 0.");void sync(true);
+    for(const item of attachments)await deleteReceipt(item);
    }catch(e){error("reset-error",e.message);$("resetBtn").disabled=false;$("resetBtn").textContent="Reintentar borrado"}
    finally{writing=false}
   };
@@ -257,7 +365,7 @@ function openModal(type,movement=null){
   $("canceldelete").onclick=()=>closeModal();
   $("confirmdelete").onclick=async()=>{
    if(writing)return;writing=true;$("confirmdelete").disabled=true;$("confirmdelete").textContent="Eliminando...";
-   try{await modifyExpense(movement.id,null);closeModal();renderDashboard();notify("Gasto eliminado. El saldo se actualizó.");void sync(true)}
+   try{await modifyExpense(movement.id,null);for(const attachment of receiptEntries(movement))await deleteReceipt(attachment);closeModal();renderDashboard();notify("Gasto y comprobantes eliminados. Saldo actualizado.");void sync(true)}
    catch(e){error("delete-error",e.message);$("confirmdelete").disabled=false;$("confirmdelete").textContent="Reintentar"}
    finally{writing=false}
   };
@@ -269,34 +377,72 @@ function openModal(type,movement=null){
    '<form id="movform"><label class="label" for="movamount">Monto (pesos argentinos)</label><input id="movamount" inputmode="numeric" class="field amount-field" required placeholder="$ 0" value="'+(edit?Math.abs(movement.amount):"")+'">'+
    '<p class="muted" style="margin-top:7px">Disponible: '+money(balance())+'</p>'+
    '<label class="label" for="movcat">Categoría</label><select class="field" id="movcat">'+choices.map(x=>'<option>'+clean(x)+'</option>').join("")+'</select>'+
-   '<label class="label" for="movdesc">¿En qué se gastó?</label><textarea id="movdesc" class="field" rows="3" maxlength="180" placeholder="'+clean(inputDesc)+'">'+(edit?clean(movement.description):"")+'</textarea><div id="mov-error"></div><button class="btn main full mt" id="movsave">'+(edit?"Guardar cambios":"Confirmar "+(type==="gasto"?"gasto":"ingreso"))+'</button></form>';
+   '<label class="label" for="movdesc">¿En qué se gastó?</label><textarea id="movdesc" class="field" rows="3" maxlength="180" placeholder="'+clean(inputDesc)+'">'+(edit?clean(movement.description):"")+'</textarea>'+
+   ((type==="gasto"||edit)?'<label class="label" for="receiptInput">📎 Fotos del comprobante (opcional)</label>'+
+   '<input class="field receipt-input" type="file" id="receiptInput" accept="image/*" multiple aria-label="Adjuntar fotos del comprobante">'+
+   '<div id="receiptHelp" class="receipt-hint">Hasta 2 fotos por gasto. Se comprimen automáticamente.</div>'+
+   '<div id="receiptPreview" class="receipt-pills"></div><div id="receipt-error"></div>':'')+
+   '<div id="mov-error"></div><button class="btn main full mt" id="movsave">'+(edit?"Guardar cambios":"Confirmar "+(type==="gasto"?"gasto":"ingreso"))+'</button></form>';
   if(type==="ingreso")document.querySelector('label[for="movdesc"]').textContent="Concepto del ingreso";
+  if(type==="gasto"||edit){
+   keptReceipts=edit?receiptEntries(movement):[];
+   previewReceiptInput();
+   $("receiptInput").onchange=()=>{
+    const incoming=[...$("receiptInput").files];
+    const available=MAX_RECEIPTS-keptReceipts.length;
+    if(incoming.length>available){error("receipt-error","Permitimos hasta "+MAX_RECEIPTS+" fotos por gasto.");selectedReceipts=incoming.slice(0,Math.max(available,0));}
+    else{error("receipt-error","");selectedReceipts=incoming;}
+    previewReceiptInput();
+   };
+  }
   if(edit){$("movcat").value=choices.includes(movement.category)?movement.category:"Otros gastos";$("movform").onsubmit=(e)=>saveMovement(e,movement.id);}
   else $("movform").onsubmit=saveMovement;
  }
  over.classList.add("open");
 }
-function closeModal(){$("overlay").classList.remove("open");modalType=null}
+function closeModal(){$("overlay").classList.remove("open");modalType=null;cleanupURLs(tempImageURLs);cleanupURLs(modalImageURLs);selectedReceipts=[];keptReceipts=[]}
 async function saveMovement(e,editId=null){
  e.preventDefault();if(writing)return;
  const amount=int($("movamount").value),neg=modalType==="gasto"||modalType==="editar";
  if(amount<=0||amount>100000000)return error("mov-error","Ingresá un monto válido.");
  if(neg&&!editId&&amount>balance())return error("mov-error","El monto supera el efectivo disponible.");
  const mv={id:makeID(),ts:new Date().toISOString(),day:nowAR(),amount:neg?-amount:amount,category:$("movcat").value,description:$("movdesc").value.trim(),author:cfg.name};
- const btn=$("movsave");btn.disabled=true;btn.textContent="Registrando...";
+ const files=[...selectedReceipts],previouslyKept=[...keptReceipts];
+ if(files.length+previouslyKept.length>MAX_RECEIPTS)return error("receipt-error","Hasta 2 fotos por gasto.");
+ const btn=$("movsave");btn.disabled=true;btn.textContent=files.length?"Subiendo comprobantes...":"Registrando...";
  writing=true;
+ const uploaded=[];
  try{
   const newest=await Promise.all([getRecord("owner"),getRecord("partner")]);
   account={owner:newest[0],partner:newest[1]};
   if(neg&&!editId&&amount>balance())throw Error("Ya no queda saldo suficiente. Actualizá la caja.");
+  const old=editId?findMovement(editId):null;
+  if(editId&&!old)throw Error("Este gasto ya no existe.");
+  for(let i=0;i<files.length;i++){
+   btn.textContent="Subiendo foto "+(i+1)+" de "+files.length+"...";
+   const receipt=await saveReceipt(files[i]);
+   uploaded.push(receipt);
+  }
+  const receipts=[...previouslyKept,...uploaded];
   if(editId){
-   await modifyExpense(editId,{amount,category:mv.category,description:mv.description});
+   await modifyExpense(editId,{amount,category:mv.category,description:mv.description,receipts});
   }else{
+   if(neg)mv.receipts=receipts;
    await updateRecord(cfg.role,mv);
   }
-  closeModal();renderDashboard();notify(editId?"Gasto actualizado. Saldo recalculado.":"Movimiento guardado y compartido.");void sync(true);
- }catch(err){error("mov-error",err.message);btn.disabled=false;btn.textContent="Reintentar"}
- finally{writing=false}
+  const removed=old?receiptEntries(old).filter(x=>!receipts.some(y=>x.id===y.id)):[];
+  closeModal();renderDashboard();notify(editId?"Gasto y comprobantes actualizados.":"Gasto y comprobantes guardados.");void sync(true);
+  for(const item of removed)void deleteReceipt(item);
+ }catch(err){
+  // If the ledger was successfully written but its verification failed, keep uploaded photos available.
+  let linked=false;
+  try{
+   const raw=await getRecord(editId?findMovement(editId)?.sourceRole||cfg.role:cfg.role);
+   linked=raw.moves.some(m=>(editId?m.id===editId:m.id===mv.id)&&uploaded.every(x=>receiptEntries(m).some(y=>y.id===x.id)));
+  }catch{}
+  if(!linked)for(const item of uploaded)void deleteReceipt(item);
+  error("mov-error",err.message);btn.disabled=false;btn.textContent="Reintentar";
+ }finally{writing=false}
 }
 function copy(text){if(navigator.clipboard?.writeText){navigator.clipboard.writeText(text).then(()=>notify("Enlace copiado al portapapeles")).catch(()=>prompt("Copiá este enlace:",text))}else prompt("Copiá este enlace:",text)}
 function download(content,mime,name){const u=URL.createObjectURL(new Blob([content],{type:mime})),a=document.createElement("a");a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),2500)}
@@ -310,8 +456,8 @@ function exportFile(type){
   download("\ufeff"+rows.map(r=>r.map(esc).join(";")).join("\r\n"),"text/csv;charset=utf-8","movimientos-gaviota-"+nowAR()+".csv");
  }
 }
-$("mclose").onclick=()=>$("overlay").classList.remove("open");
-$("overlay").onclick=e=>{if(e.target===$("overlay"))$("overlay").classList.remove("open")};
+$("mclose").onclick=()=>closeModal();
+$("overlay").onclick=e=>{if(e.target===$("overlay"))closeModal()};
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&cfg?.name)void sync(true)});
 window.addEventListener("online",()=>{if(cfg?.name)void sync()});
 setup();
